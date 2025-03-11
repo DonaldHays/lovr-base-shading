@@ -1,0 +1,41 @@
+--- @meta _
+
+--- A type that configures shadow sampling.
+---
+--- Shadows may be created using `BaseShading.newShadow(props)`. See that API
+--- for default values.
+---
+--- The shadow will apply for the light in the `BaseLight` list for
+--- `lightIndex`. The index is 1-based. Alternatively, you can assign the
+--- sentinel values from `BaseShading.ShadowLightIndex`. From that table,
+--- `kDisabled` will disable the shadow, while `kUniversal` will apply the
+--- shadow to all lights.
+---
+--- If `lightIndex` is `BaseShading.ShadowLightIndex.kUniversal`, the opacity of
+--- the shadow will be determined by `universalOpacity`.
+---
+--- Increase the `bias` field to reduce shadow acne, or decrease it to reduce
+--- peter-panning. It will never be perfect. You will never be happy.
+---
+--- When `sampleRange` is bigger than 0, the shadow will be sampled multiple
+--- times, with the spread controlled by `pcfScale`. Higher values will spread
+--- the shadow samples out more, at the risk of producing visible banding. The
+--- value should be quite a bit smaller than 1. Even `1.0 / 64.0` will likely
+--- look banded.
+---
+--- Increasing `sampleRange` increases the number of samples, by the equation
+--- `(sampleRange * 2 + 1) ^ 2`. e.g:
+--- - `0` will result in 1 sample.
+--- - `1` will result in 9 samples.
+--- - `2` will result in 25 samples.
+---
+--- The `fadeEdge` field will fade the shadow out at the edge of the shadow map.
+--- This tends to only look right on directional lights, not spotlights.
+---
+--- @class BaseShadow
+--- @field lightIndex? integer
+--- @field universalOpacity? number
+--- @field bias? number
+--- @field pcfScale? number
+--- @field sampleRange? integer
+--- @field fadeEdge? number

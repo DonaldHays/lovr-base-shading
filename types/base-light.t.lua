@@ -1,0 +1,51 @@
+--- @meta _
+
+--- A type that represents a dynamic light.
+---
+--- Lights may be created using `BaseShading.newLight(props)`. See that API for
+--- default values.
+---
+--- A light can be in one of three modes: inactive, vertex, or fragment.
+--- If a light is inactive, it will not be used in the shading calculations,
+--- saving performance. Vertex lights are calculated per-vertex, with the
+--- results interpolated across the surface of the object. Fragment lights are
+--- calculated per-fragment, which is more accurate but slower.
+---
+--- A light may be configured as a directional, point, or spotlight. Rather than
+--- using a separate field to store the kind of light, the `position` and
+--- `spotCutoff` fields determine the light's type.
+---
+--- - To create a directional light, set `position.w` to `0` and `spotCutoff` to
+---  `180`.
+--- - To create a point light, set `position.w` to `1` and `spotCutoff` to
+---  `180`.
+--- - To create a spotlight, set `position.w` to `1` and `spotCutoff` to a value
+---  from `0` to `90`. Yes, it's weird that a `spotCutoff` of `180` means "not
+---  a spotlight" while the maximum value for spotlights is `90`. Blame OpenGL.
+---
+--- Point and spotlights support attenuation using the `constantAttenuation`,
+--- `linearAttenuation`, and `quadraticAttenuation` fields. The attenuation
+--- formula is `1 / (constant + linear * d + quadratic * d^2)`, where `d` is the
+--- world-space distance from the light to the point being lit.
+---
+--- Spotlights point in a direction set by the `spotDirection` field. The
+--- `spotCutoff` field determines the angle of the spotlight's cone, in degrees.
+--- The `spotExponent` field sets the intensity of the spotlight, with higher
+--- values focusing the light towards the center of the cone.
+---
+--- The color and intensity of the light are determined by the `ambient`,
+--- `diffuse`, and `specular` fields. These values are multiplied by the
+--- corresponding values in the material.
+---
+--- @class BaseLight
+--- @field mode? LightMode
+--- @field constantAttenuation? number
+--- @field linearAttenuation? number
+--- @field quadraticAttenuation? number
+--- @field spotCutoff? number
+--- @field spotExponent? number
+--- @field spotDirection? lovr.Vec3
+--- @field position? lovr.Vec4
+--- @field ambient? lovr.Vec4
+--- @field diffuse? lovr.Vec4
+--- @field specular? lovr.Vec4

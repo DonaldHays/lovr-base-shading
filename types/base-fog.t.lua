@@ -1,0 +1,32 @@
+--- @meta _
+
+--- A type that represents fog.
+---
+--- Fog may be created using `BaseShading.newFog(props)`. See that API for
+--- default values.
+---
+--- If fog is enabled, it can be in one of three modes: linear, exp, or exp2.
+--- In all three modes, let `d` be the distance from the camera to the point.
+--- In linear mode, the fog factor is
+--- `(linearEnd - d) / (linearEnd - linearStart)`. In exp mode, the fog factor
+--- is `exp(-expDensity * d)`. In exp2 mode, the fog factor is
+--- `exp(-expDensity * d * d)`.
+---
+--- Additionally, fog can be calculated per-vertex or per-fragment. Per-vertex
+--- fog is calculated in the vertex shader, and the results are interpolated
+--- across the surface of the object. Per-fragment fog is calculated in the
+--- fragment shader, which is more accurate but slower.
+---
+--- In all cases, fog is calculated based on the distance from the camera to the
+--- point being shaded. It is not calculated based on the z-depth of the point,
+--- which would yield view-dependent results that look particularly poor in VR.
+---
+--- The color of the fog is determined by the `color` field.
+---
+--- @class BaseFog
+--- @field mode? FogMode
+--- @field type? FogType
+--- @field color? lovr.Vec4
+--- @field expDensity? number
+--- @field linearStart? number
+--- @field linearEnd? number
