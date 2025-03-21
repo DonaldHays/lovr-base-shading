@@ -15,6 +15,9 @@
 #define kShadowIndexDisabled 0
 #define kShadowIndexUniversal -1
 
+layout(constant_id = 900) const bool flag_baseFog = true;
+layout(constant_id = 901) const bool flag_baseShadow = true;
+
 struct BaseSurface {
     vec4 color;
     vec4 emissive;
@@ -177,17 +180,19 @@ vec4 getBaseLight(int index, vec3 pos, vec3 viewDir, vec3 normal) {
 }
 
 float getFogAmount(float distance) {
-    if (fog.mode == kFogModeLinear) {
-        return clamp(
-            (fog.linearEnd - distance) / (fog.linearEnd - fog.linearStart),
-            0.0,
-            1.0
-        );
-    } else if (fog.mode == kFogModeExp) {
-        return exp(-fog.expDensity * distance);
-    } else if (fog.mode == kFogModeExp2) {
-        return exp(-fog.expDensity * distance * distance);
-    } else {
-        return 0.0;
+    if (flag_baseFog) {
+        if (fog.mode == kFogModeLinear) {
+            return clamp(
+                (fog.linearEnd - distance) / (fog.linearEnd - fog.linearStart),
+                0.0,
+                1.0
+            );
+        } else if (fog.mode == kFogModeExp) {
+            return exp(-fog.expDensity * distance);
+        } else if (fog.mode == kFogModeExp2) {
+            return exp(-fog.expDensity * distance * distance);
+        }
     }
+
+    return 0.0;
 }

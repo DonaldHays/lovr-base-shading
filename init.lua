@@ -300,9 +300,22 @@ end
 --- The `baseSurface` function should write to the `color` and, optionally,
 --- `emissive` fields.
 ---
+--- The `flags` table contains shader flags. The base shading library defines
+--- the following flags:
+---
+--- - `baseFog`: If `false`, fog will not be rendered, regardless of the
+---   `BaseFog` configuration. Default: `true`.
+--- - `baseShadow`: If `false`, shadows will not be rendered, regardless of the
+---   `BaseShadow` configuration. Default: `true`.
+---
 --- @param source? string
+--- @param flags? table
 --- @return lovr.Shader
-function BaseShading:newSurfaceShader(source)
+function BaseShading:newSurfaceShader(source, flags)
+    local options = {
+        flags = flags or {}
+    }
+
     if source then
         local substituted = string.gsub(
             fragmentShader,
@@ -310,9 +323,9 @@ function BaseShading:newSurfaceShader(source)
             source
         )
 
-        return lovr.graphics.newShader(vertexShader, substituted, {})
+        return lovr.graphics.newShader(vertexShader, substituted, options)
     else
-        return lovr.graphics.newShader(vertexShader, fragmentShader, {})
+        return lovr.graphics.newShader(vertexShader, fragmentShader, options)
     end
 end
 

@@ -41,34 +41,39 @@ vec4 lovrmain() {
 
     // Calculate shadow amount, if shadows are enabled
     float shadowAmount = 0;
-    if (shadow.lightIndex != kShadowIndexDisabled) {
-        // Convert world-space fragment position to light-space, then to NDC,
-        // and then to shadow map coordinates.
-        //
-        // shadowCoord is 0-1 in all dimensions. NDC is -1 to 1 in x for y, and
-        // 0 to 1 for z, so we only need to adjust the x and y components. We do
-        // fiddle with the z component for bias, though.
-        vec4 posLightSpace = lightSpaceMatrix * vec4(PositionWorld, 1);
-        vec3 posNDC = posLightSpace.xyz / posLightSpace.w;
-        vec3 shadowCoord = vec3(posNDC.xy * 0.5 + 0.5, posNDC.z - shadow.bias);
-        
-        // Accumulate shadow samples
-        for (int x = -shadow.sampleRange; x <= shadow.sampleRange; x++) {
-            for (int y = -shadow.sampleRange; y <= shadow.sampleRange; y++) {
-                shadowAmount += texture(
-                    sampler2DShadow(shadowTexture, shadowSampler),
-                    shadowCoord + vec3(x, y, 0) * shadow.pcfScale
-                );
+    if (flag_baseShadow) {
+        if (shadow.lightIndex != kShadowIndexDisabled) {
+            // Convert world-space fragment position to light-space, then to
+            // NDC, and then to shadow map coordinates.
+            //
+            // shadowCoord is 0-1 in all dimensions. NDC is -1 to 1 in x for y,
+            // and 0 to 1 for z, so we only need to adjust the x and y
+            // components. We do fiddle with the z component for bias, though.
+            vec4 posLightSpace = lightSpaceMatrix * vec4(PositionWorld, 1);
+            vec3 posNDC = posLightSpace.xyz / posLightSpace.w;
+            vec3 shadowCoord = vec3(
+                posNDC.xy * 0.5 + 0.5, posNDC.z - shadow.bias
+            );
+            
+            // Accumulate shadow samples
+            const int sampleRange = shadow.sampleRange;
+            for (int x = -sampleRange; x <= sampleRange; x++) {
+                for (int y = -sampleRange; y <= sampleRange; y++) {
+                    shadowAmount += texture(
+                        sampler2DShadow(shadowTexture, shadowSampler),
+                        shadowCoord + vec3(x, y, 0) * shadow.pcfScale
+                    );
+                }
             }
-        }
 
-        // Normalize samples
-        float sampleRangeBase = float(shadow.sampleRange * 2 + 1);
-        shadowAmount /= sampleRangeBase * sampleRangeBase;
-        
-        // Fade edges
-        float edgeOpacity = shadowMapEdgeOpacity(shadowCoord);
-        shadowAmount = 1 + (shadowAmount - 1) * edgeOpacity;
+            // Normalize samples
+            float sampleRangeBase = float(sampleRange * 2 + 1);
+            shadowAmount /= sampleRangeBase * sampleRangeBase;
+            
+            // Fade edges
+            float edgeOpacity = shadowMapEdgeOpacity(shadowCoord);
+            shadowAmount = 1 + (shadowAmount - 1) * edgeOpacity;
+        }
     }
 
     // Calculate light parameters
@@ -84,8 +89,10 @@ vec4 lovrmain() {
             // Apply shadow map, if it impacts this light specifically.
             //
             // `lightIndex` is 1-based to match Lua, so we subtract 1 here.
-            if (i == shadow.lightIndex - 1) {
-                lightSample *= shadowAmount;
+            if (flag_baseShadow) {
+                if (i == shadow.lightIndex - 1) {
+                    lightSample *= shadowAmount;
+                }
             }
 
             light += lightSample;
@@ -93,22 +100,26 @@ vec4 lovrmain() {
     }
 
     // Apply universal shadow opacity
-    if (shadow.lightIndex == kShadowIndexUniversal) {
-        light *= 1 + (shadowAmount - 1) * shadow.universalOpacity;
+    if (flag_baseShadow) {
+        if (shadow.lightIndex == kShadowIndexUniversal) {
+            light *= 1 + (shadowAmount - 1) * shadow.universalOpacity;
+        }
     }
 
     // Calculate lit color
     vec4 color = surface.color * light + surface.emissive;
 
     // Apply fog
-    if (fog.mode != kFogModeInactive) {
-        float fogAmount = vertexFog;
-        if (fog.type == kFogTypeFragment) {
-            fogAmount = getFogAmount(
-                length(CameraPositionWorld - PositionWorld)
-            );
+    if (flag_baseFog) {
+        if (fog.mode != kFogModeInactive) {
+            float fogAmount = vertexFog;
+            if (fog.type == kFogTypeFragment) {
+                fogAmount = getFogAmount(
+                    length(CameraPositionWorld - PositionWorld)
+                );
+            }
+            color = mix(fog.color, color, fogAmount);
         }
-        color = mix(fog.color, color, fogAmount);
     }
 
     return color;

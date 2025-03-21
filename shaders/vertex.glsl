@@ -21,8 +21,10 @@ vec4 lovrmain() {
     }
 
     // Apply fog
-    if (fog.type == kFogTypeVertex) {
-        vertexFog = getFogAmount(length(CameraPositionWorld - worldPos));
+    if (flag_baseFog) {
+        if (fog.type == kFogTypeVertex) {
+            vertexFog = getFogAmount(length(CameraPositionWorld - worldPos));
+        }
     }
 
     return ClipFromLocal * VertexPosition;
