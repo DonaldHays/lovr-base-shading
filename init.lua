@@ -21,8 +21,8 @@ local lightsUniformContainer = { lights = {} }
 --- actually necessary, and not call this function if not.
 ---
 --- @param resolution number
---- @return lovr.Texture
---- @return lovr.Pass
+--- @return Texture
+--- @return Pass
 local function createShadowObjects(resolution)
     local shadowMapTexture = lovr.graphics.newTexture(
         resolution,
@@ -44,9 +44,9 @@ local function createShadowObjects(resolution)
 end
 
 --- @class BaseShading
---- @field shadowPass lovr.Pass
---- @field private shadowTexture lovr.Texture
---- @field private shadowSampler lovr.Sampler
+--- @field shadowPass Pass
+--- @field private shadowTexture Texture
+--- @field private shadowSampler Sampler
 --- @field private lightSpaceMatrix any
 local BaseShading = {}
 BaseShading.__index = BaseShading
@@ -310,7 +310,7 @@ end
 ---
 --- @param source? string
 --- @param flags? table
---- @return lovr.Shader
+--- @return Shader
 function BaseShading:newSurfaceShader(source, flags)
     local options = {
         flags = flags or {}
@@ -349,7 +349,7 @@ end
 ---
 --- The current shader must be a surface shader.
 ---
---- @param pass lovr.Pass
+--- @param pass Pass
 --- @param lights BaseLight[]
 function BaseShading:sendLights(pass, lights)
     lightsUniformContainer.lights = lights
@@ -360,7 +360,7 @@ end
 ---
 --- The current shader must be a surface shader.
 ---
---- @param pass lovr.Pass
+--- @param pass Pass
 --- @param material BaseMaterial
 function BaseShading:sendMaterial(pass, material)
     pass:send("material", material)
@@ -370,7 +370,7 @@ end
 ---
 --- The current shader must be a surface shader.
 ---
---- @param pass lovr.Pass
+--- @param pass Pass
 --- @param fog BaseFog
 function BaseShading:sendFog(pass, fog)
     pass:send("fog", fog)
@@ -380,8 +380,8 @@ end
 ---
 --- The current shader must be a surface shader.
 ---
---- @param pass lovr.Pass
---- @param ambient lovr.Vec4
+--- @param pass Pass
+--- @param ambient Vec4
 function BaseShading:sendAmbient(pass, ambient)
     pass:send("ambient", ambient)
 end
@@ -390,7 +390,7 @@ end
 ---
 --- The current shader must be a surface shader.
 ---
---- @param pass lovr.Pass
+--- @param pass Pass
 --- @param shadow BaseShadow
 function BaseShading:sendShadow(pass, shadow)
     pass:send("shadowSampler", self.shadowSampler)
@@ -411,8 +411,8 @@ end
 --- towards `dir`, with a size of `size`. The shadow will be rendered between
 --- `near` and `far`.
 ---
---- @param pos lovr.Vec3
---- @param dir lovr.Vec3
+--- @param pos Vec3
+--- @param dir Vec3
 --- @param size number
 --- @param near number
 --- @param far number
@@ -438,8 +438,8 @@ end
 --- originally defined by OpenGL. Also the angle is in degrees, again because
 --- of OpenGL. Sorry.
 ---
---- @param pos lovr.Vec3
---- @param dir lovr.Vec3
+--- @param pos Vec3
+--- @param dir Vec3
 --- @param angle number
 --- @param near number
 --- @param far number

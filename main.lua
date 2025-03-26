@@ -4,13 +4,13 @@
 local BaseShading = require "."
 
 local base        --- @type BaseShading
-local shader      --- @type lovr.Shader
+local shader      --- @type Shader
 local lights = {} --- @type BaseLight[]
 local spotlight   --- @type BaseLight
 local material    --- @type BaseMaterial
 local shadow      --- @type BaseShadow
 local fog         --- @type BaseFog
-local ambient     --- @type lovr.Vec4
+local ambient     --- @type Vec4
 
 function lovr.load()
     -- Create a new `BaseShading` instance. Here we're supplying a custom
@@ -158,5 +158,5 @@ function lovr.draw(pass)
 
     -- Commit both the shadow and main passes. We specifically pass the shadow
     -- pass first so that the resulting shadow map may be used by the main pass.
-    return lovr.graphics.submit { base.shadowPass, pass }
+    return lovr.graphics.submit(base.shadowPass, pass)
 end

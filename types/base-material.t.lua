@@ -17,8 +17,8 @@
 --- values will concentrate the highlight into a smaller area.
 ---
 --- @class BaseMaterial
---- @field ambient? lovr.Vec4
---- @field diffuse? lovr.Vec4
---- @field emissive? lovr.Vec4
---- @field specular? lovr.Vec4
+--- @field ambient? Vec4
+--- @field diffuse? Vec4
+--- @field emissive? Vec4
+--- @field specular? Vec4
 --- @field shininess? number

@@ -26,7 +26,7 @@
 --- @class BaseFog
 --- @field mode? FogMode
 --- @field type? FogType
---- @field color? lovr.Vec4
+--- @field color? Vec4
 --- @field expDensity? number
 --- @field linearStart? number
 --- @field linearEnd? number
