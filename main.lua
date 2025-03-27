@@ -102,7 +102,7 @@ function lovr.draw(pass)
     -- Prepare the shadow map projection parameters. Note that this is set on
     -- the base shading instance, independently of the surface shader.
     base:sendSpotlightShadow(
-        spotlight.position.xyz,
+        spotlight.position["xyz"],
         spotlight.spotDirection,
         spotlight.spotCutoff,
         0.1,
