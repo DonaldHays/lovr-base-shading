@@ -83,7 +83,7 @@ vec4 lovrmain() {
 
     // Accumulate fragment lights
     for (int i = 0; i < kLightCount; i++) {
-        if (lights[i].mode == kLightModeFragment) {
+        if (baseLights.lights[i].mode == kLightModeFragment) {
             vec4 lightSample = getBaseLight(i, PositionWorld, viewDir, normal);
 
             // Apply shadow map, if it impacts this light specifically.

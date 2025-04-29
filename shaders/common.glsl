@@ -37,6 +37,10 @@ struct BaseLight {
     vec4 specular;
 };
 
+struct BaseLightList {
+    BaseLight lights[kLightCount];
+};
+
 struct BaseMaterial {
     vec4 ambient;
     vec4 diffuse;
@@ -121,16 +125,13 @@ struct BaseShadow {
     float fadeEdge;
 };
 
-uniform BaseLights {
-    BaseLight lights[kLightCount];
-};
-
+uniform BaseLightList baseLights;
 uniform BaseMaterial material;
 uniform BaseFog fog;
 uniform vec4 ambient;
 
 vec4 getBaseLight(int index, vec3 pos, vec3 viewDir, vec3 normal) {
-    BaseLight baseLight = lights[index];
+    BaseLight baseLight = baseLights.lights[index];
 
     vec3 lightDir;
     float attenuation;

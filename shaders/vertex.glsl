@@ -15,7 +15,7 @@ vec4 lovrmain() {
 
     // Accumulate vertex lights
     for (int i = 0; i < kLightCount; i++) {
-        if (lights[i].mode == kLightModeVertex) {
+        if (baseLights.lights[i].mode == kLightModeVertex) {
             vertexLight += getBaseLight(i, worldPos, viewDir, normal);
         }
     }

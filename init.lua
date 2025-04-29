@@ -353,7 +353,7 @@ end
 --- @param lights BaseLight[]
 function BaseShading:sendLights(pass, lights)
     lightsUniformContainer.lights = lights
-    pass:send("BaseLights", lightsUniformContainer)
+    pass:send("baseLights", lightsUniformContainer)
 end
 
 --- Sends `material` to the current shader of `pass`.
