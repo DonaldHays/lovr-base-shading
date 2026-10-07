@@ -43,6 +43,28 @@ local function createShadowObjects(resolution)
     return shadowMapTexture, shadowPass
 end
 
+local BaseColorMethods = {}
+local BaseColorProps = { r = 1, g = 2, b = 3, a = 4 }
+local BaseColor = {
+    __index = function(t, k)
+        return BaseColorMethods[k] or rawget(t, BaseColorProps[k])
+    end,
+    __newindex = function(t, k, v)
+        error("Color is immutable")
+    end
+}
+
+local V4Methods = {}
+local V4Props = { x = 1, y = 2, z = 3, w = 4 }
+local V4 = {
+    __index = function(t, k)
+        return V4Methods[k] or rawget(t, V4Props[k])
+    end,
+    __newindex = function(t, k, v)
+        error("V4 is immutable")
+    end
+}
+
 --- @class BaseShading
 --- @field shadowPass Pass
 --- @field private shadowTexture Texture
@@ -50,6 +72,109 @@ end
 --- @field private lightSpaceMatrix any
 local BaseShading = {}
 BaseShading.__index = BaseShading
+
+BaseShading.Color = BaseColor --[[@as BaseColor]]
+BaseShading.V4 = V4 --[[@as BaseV4]]
+
+--- @param c BaseColor
+--- @return BaseColor
+function BaseColorMethods.asGamma(c)
+    if c.colorSpace ~= "linear" then
+        return c
+    end
+
+    local r, g, b = lovr.math.linearToGamma(c[1], c[2], c[3]) --[[@as number]]
+
+    return BaseShading.newColor(r, g, b, c[4], "gamma")
+end
+
+--- @param c BaseColor
+--- @return BaseColor
+function BaseColorMethods.asLinear(c)
+    if c.colorSpace == "linear" then
+        return c
+    end
+
+    local r, g, b = lovr.math.gammaToLinear(c[1], c[2], c[3]) --[[@as number]]
+
+    return BaseShading.newColor(r, g, b, c[4], "linear")
+end
+
+function V4.__unm(v)
+    return BaseShading.newV4(-v[1], -v[2], -v[3], -v[4])
+end
+
+function V4.__add(a, b)
+    if type(b) == "number" then
+        return BaseShading.newV4(a[1] + b, a[2] + b, a[3] + b, a[4] + b)
+    else
+        return BaseShading.newV4(
+            a[1] + b[1], a[2] + b[2], a[3] + b[3], a[4] + b[4]
+        )
+    end
+end
+
+function V4.__sub(a, b)
+    if type(b) == "number" then
+        return BaseShading.newV4(a[1] - b, a[2] - b, a[3] - b, a[4] - b)
+    else
+        return BaseShading.newV4(
+            a[1] - b[1], a[2] - b[2], a[3] - b[3], a[4] - b[4]
+        )
+    end
+end
+
+function V4.__mul(a, b)
+    if type(b) == "number" then
+        return BaseShading.newV4(a[1] * b, a[2] * b, a[3] * b, a[4] * b)
+    else
+        return BaseShading.newV4(
+            a[1] * b[1], a[2] * b[2], a[3] * b[3], a[4] * b[4]
+        )
+    end
+end
+
+function V4.__div(a, b)
+    if type(b) == "number" then
+        return BaseShading.newV4(a[1] / b, a[2] / b, a[3] / b, a[4] / b)
+    else
+        return BaseShading.newV4(
+            a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4]
+        )
+    end
+end
+
+--- @param v BaseV4
+--- @return vector
+function V4Methods.xyz(v)
+    return vector(v[1], v[2], v[3])
+end
+
+--- @param a BaseV4
+--- @param b BaseV4
+--- @return number
+function V4Methods.distance(a, b)
+    return (a - b):length()
+end
+
+--- @param a BaseV4
+--- @param b BaseV4
+--- @return number
+function V4Methods.dot(a, b)
+    return a[1] * b[1] + a[2] * b[2] + a[3] * b[3] + a[4] * b[4]
+end
+
+--- @param v BaseV4
+--- @return number
+function V4Methods.length(v)
+    return math.sqrt(v:dot(v))
+end
+
+--- @param v BaseV4
+--- @return BaseV4
+function V4Methods.normalize(v)
+    return v / v:length()
+end
 
 --- A type that controls whether and how a light is calculated.
 ---
@@ -107,6 +232,32 @@ BaseShading.ShadowLightIndex = {
     kUniversal = -1,
 }
 
+--- @param r number
+--- @param g number
+--- @param b number
+--- @param a? number
+--- @param colorSpace? BaseColorSpace
+--- @return BaseColor
+function BaseShading.newColor(r, g, b, a, colorSpace)
+    a = a or 1
+
+    if colorSpace == nil then
+        colorSpace = "linear"
+        r, g, b = lovr.math.gammaToLinear(r, g, b) --[[@as number]]
+    end
+
+    return setmetatable({ r, g, b, a, colorSpace = colorSpace }, BaseColor)
+end
+
+--- @param x number
+--- @param y number
+--- @param z number
+--- @param w number
+--- @return BaseV4
+function BaseShading.newV4(x, y, z, w)
+    return setmetatable({ x, y, z, w }, V4)
+end
+
 --- Returns a new light, preconfigured with the values in `props`.
 ---
 --- If any `BaseLight` keys are missing from `props`, they will be filled with
@@ -136,11 +287,11 @@ function BaseShading.newLight(props)
         quadraticAttenuation = props.quadraticAttenuation or 0,
         spotCutoff = props.spotCutoff or 180,
         spotExponent = props.spotExponent or 0,
-        spotDirection = props.spotDirection or lovr.math.newVec3(0, 0, -1),
-        position = props.position or lovr.math.newVec4(0, 0, 1, 0),
-        ambient = props.ambient or lovr.math.newVec4(0, 0, 0, 1),
-        diffuse = props.diffuse or lovr.math.newVec4(0, 0, 0, 1),
-        specular = props.specular or lovr.math.newVec4(0, 0, 0, 1),
+        spotDirection = props.spotDirection or vector(0, 0, -1),
+        position = props.position or BaseShading.newV4(0, 0, 1, 0),
+        ambient = props.ambient or BaseShading.newColor(0, 0, 0, 1),
+        diffuse = props.diffuse or BaseShading.newColor(0, 0, 0, 1),
+        specular = props.specular or BaseShading.newColor(0, 0, 0, 1),
     }
 end
 
@@ -161,10 +312,10 @@ function BaseShading.newMaterial(props)
     props = props or {}
 
     return {
-        ambient = props.ambient or lovr.math.newVec4(0.2, 0.2, 0.2, 1),
-        diffuse = props.diffuse or lovr.math.newVec4(0.8, 0.8, 0.8, 1),
-        emissive = props.emissive or lovr.math.newVec4(0, 0, 0, 1),
-        specular = props.specular or lovr.math.newVec4(0, 0, 0, 1),
+        ambient = props.ambient or BaseShading.newColor(0.2, 0.2, 0.2, 1),
+        diffuse = props.diffuse or BaseShading.newColor(0.8, 0.8, 0.8, 1),
+        emissive = props.emissive or BaseShading.newColor(0, 0, 0, 1),
+        specular = props.specular or BaseShading.newColor(0, 0, 0, 1),
         shininess = props.shininess or 0,
     }
 end
@@ -189,7 +340,7 @@ function BaseShading.newFog(props)
     return {
         mode = props.mode or BaseShading.FogMode.kInactive,
         type = props.type or BaseShading.FogType.kVertex,
-        color = props.color or lovr.math.newVec4(0, 0, 0, 1),
+        color = props.color or BaseShading.newColor(0, 0, 0, 1),
         expDensity = props.expDensity or 1,
         linearStart = props.linearStart or 0,
         linearEnd = props.linearEnd or 1,
@@ -229,9 +380,9 @@ end
 ---
 --- @type BaseMaterial
 BaseShading.unlitMaterial = BaseShading.newMaterial {
-    ambient = lovr.math.newVec4(0, 0, 0, 1),
-    diffuse = lovr.math.newVec4(0, 0, 0, 1),
-    emissive = lovr.math.newVec4(1, 1, 1, 1),
+    ambient = BaseShading.newColor(0, 0, 0, 1),
+    diffuse = BaseShading.newColor(0, 0, 0, 1),
+    emissive = BaseShading.newColor(1, 1, 1, 1),
 }
 
 --- A default fog configuration that disables fog.
@@ -381,7 +532,7 @@ end
 --- The current shader must be a surface shader.
 ---
 --- @param pass Pass
---- @param ambient Vec4
+--- @param ambient BaseColor
 function BaseShading:sendAmbient(pass, ambient)
     pass:send("ambient", ambient)
 end
@@ -411,18 +562,18 @@ end
 --- towards `dir`, with a size of `size`. The shadow will be rendered between
 --- `near` and `far`.
 ---
---- @param pos Vec3
---- @param dir Vec3
+--- @param pos vector
+--- @param dir vector
 --- @param size number
 --- @param near number
 --- @param far number
 function BaseShading:sendDirectionalShadow(pos, dir, size, near, far)
-    local projection = lovr.math.mat4():orthographic(
+    local projection = lovr.math.newMat4():orthographic(
         -size, size, -size, size, near, far
     )
     self.shadowPass:setProjection(1, projection)
 
-    local view = lovr.math.mat4():lookAt(pos, pos + dir)
+    local view = lovr.math.newMat4():lookAt(pos, pos + dir)
     self.shadowPass:setViewPose(1, view, true)
 
     self.lightSpaceMatrix = projection * view
@@ -438,8 +589,8 @@ end
 --- originally defined by OpenGL. Also the angle is in degrees, again because
 --- of OpenGL. Sorry.
 ---
---- @param pos Vec3
---- @param dir Vec3
+--- @param pos vector
+--- @param dir vector
 --- @param angle number
 --- @param near number
 --- @param far number
@@ -447,10 +598,10 @@ function BaseShading:sendSpotlightShadow(pos, dir, angle, near, far)
     -- Yes, we do need to double the angle to match the spotlight cutoff
     -- parameter, where 90 is a full hemisphere.
     local spotAngle = math.rad(angle * 2)
-    local projection = lovr.math.mat4():perspective(spotAngle, 1, near, far)
+    local projection = lovr.math.newMat4():perspective(spotAngle, 1, near, far)
     self.shadowPass:setProjection(1, projection)
 
-    local view = lovr.math.mat4():lookAt(pos, pos + dir)
+    local view = lovr.math.newMat4():lookAt(pos, pos + dir)
     self.shadowPass:setViewPose(1, view, true)
 
     self.lightSpaceMatrix = projection * view
