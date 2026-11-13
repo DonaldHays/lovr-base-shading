@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.1 - 2026-11-13
+
+### Fixed
+
+- Fixed an issue that caused the library and sample to stop working with the
+  new filesystem rework on LÖVR.
+
 ## v0.1.0 - 2026-10-07
 
 ### Added

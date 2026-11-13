@@ -1,7 +1,7 @@
 -- This sample imports the module via "." since it's in the root of the module.
 -- Typically, you would put the module in a subdirectory and import it like
 -- `local BaseShading = require "base-shading"`.
-local BaseShading = require "."
+local BaseShading = require "init"
 
 local base        --- @type BaseShading
 local shader      --- @type Shader

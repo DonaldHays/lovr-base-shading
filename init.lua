@@ -1,13 +1,19 @@
 local root = (...):gsub("%.", "/"):gsub("/?init$", "")
-local sharedShader = lovr.filesystem.read(root .. "/shaders/common.glsl")
 
-local vertexShader = (
-    sharedShader .. lovr.filesystem.read(root .. "/shaders/vertex.glsl")
-)
+--- @param path string
+--- @return string
+local function readFile(path)
+    if #root > 0 then
+        path = string.format("%s/%s", root, path)
+    end
 
-local fragmentShader = (
-    sharedShader .. lovr.filesystem.read(root .. "/shaders/fragment.glsl")
-)
+    local contents = lovr.filesystem.read(path)
+    return contents --[[@as string]]
+end
+
+local sharedShader = readFile("shaders/common.glsl")
+local vertexShader = (sharedShader .. readFile("shaders/vertex.glsl"))
+local fragmentShader = (sharedShader .. readFile("shaders/fragment.glsl"))
 
 -- The lights uniform requires the light list to be wrapped in a table. We
 -- hide one here so that we don't have to create a new table every time we
